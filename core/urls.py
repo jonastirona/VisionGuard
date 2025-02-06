@@ -1,7 +1,7 @@
 from django.urls import path
-from camera.views import stream_page, video_feed
+from camera.views import camera_stream
 
 urlpatterns = [
-    path('', stream_page, name='stream_page'),
-    path('video_feed', video_feed, name='video_feed'),
+    path('', camera_stream, name='camera_stream'),
+    path('camera_stream', camera_stream, name='camera_stream'),
 ]

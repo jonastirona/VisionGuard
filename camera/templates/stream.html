@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Camera Stream</title>
+  </head>
+  <body>
+    <h1>Camera Feed</h1>
+    <video id="cameraStream" controls autoplay style="width:100%; max-width:600px;"></video>
+    <script>
+      const streamPort = "{{ stream_port }}";
+      const wsUrl = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + 
+              window.location.hostname + ":" + streamPort;
+      const ws = new WebSocket(wsUrl);
+      ws.binaryType = "arraybuffer";
+
+      // Create offscreen canvas for video frames
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      let firstFrame = true;
+      const canvasStream = canvas.captureStream(25);
+
+      // Setup AudioContext and MediaStreamDestination for audio
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const audioDestination = audioCtx.createMediaStreamDestination();
+
+      // Combine canvas video and audio tracks
+      const combinedStream = new MediaStream();
+      canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
+      audioDestination.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
+
+      // Set combined stream to video element
+      const videoElement = document.getElementById("cameraStream");
+      videoElement.srcObject = combinedStream;
+      videoElement.play();
+
+      // Buffer for incomplete packets
+      let buffer = new Uint8Array(0);
+      const HEADER_SIZE = 5;
+
+      ws.onmessage = function(event) {
+        const newData = new Uint8Array(event.data);
+        let tmp = new Uint8Array(buffer.length + newData.length);
+        tmp.set(buffer);
+        tmp.set(newData, buffer.length);
+        buffer = tmp;
+        parseBuffer();
+      };
+
+      function parseBuffer() {
+        while (buffer.length >= HEADER_SIZE) {
+          const type = String.fromCharCode(buffer[0]);
+          const view = new DataView(buffer.buffer, 1, 4);
+          const payloadLength = view.getUint32(0, false);
+          if (buffer.length < HEADER_SIZE + payloadLength) {
+            break;
+          }
+          const payload = buffer.slice(HEADER_SIZE, HEADER_SIZE + payloadLength);
+          processPacket(type, payload);
+          buffer = buffer.slice(HEADER_SIZE + payloadLength);
+        }
+      }
+
+      function processPacket(type, payload) {
+        if (type === 'V') {
+          // Process video packet: decode the JPEG image and draw it onto the canvas.
+          const blob = new Blob([payload], { type: 'image/jpeg' });
+          const img = new Image();
+          img.onload = function() {
+            if (firstFrame) {
+              canvas.width = img.width;
+              canvas.height = img.height;
+              firstFrame = false;
+            }
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(img.src);
+          };
+          img.src = URL.createObjectURL(blob);
+        } else if (type === 'A') {
+          // Process audio packet: decode 16-bit PCM and play it
+          playAudioFrame(payload.buffer);
+        } else {
+          console.error("Unknown packet type:", type);
+        }
+      }
+
+      function playAudioFrame(arrayBuffer) {
+        const intData = new Int16Array(arrayBuffer);
+        const floatData = new Float32Array(intData.length);
+        for (let i = 0; i < intData.length; i++) {
+          floatData[i] = intData[i] / 32768;
+        }
+        const audioBuffer = audioCtx.createBuffer(1, floatData.length, 44100);
+        audioBuffer.copyToChannel(floatData, 0, 0);
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        // Connect the audio source to the destination node so that its track is included in the stream.
+        source.connect(audioDestination);
+        source.start();
+      }
+
+      ws.onerror = function(error) {
+        console.error("WebSocket error:", error);
+      };
+
+      ws.onclose = function() {
+        console.log("WebSocket connection closed");
+      };
+    </script>
+  </body>
+</html>
