@@ -19,7 +19,6 @@ PORT = int(os.getenv('WEBSOCKET_PORT', '8000'))
 HEADER_FORMAT = "!cI"
 HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
 
-# SSL is skipped when using Cloudflare Tunnel; ensure SSL_CERT_PATH and SSL_KEY_PATH are not set.
 SSL_CERT_PATH = os.getenv('SSL_CERT_PATH')
 SSL_KEY_PATH = os.getenv('SSL_KEY_PATH')
 
@@ -40,15 +39,13 @@ def video_stream(websocket, loop):
         ret, frame = cap.read()
         if not ret:
             continue
-        # Encode frame as JPEG
         ret, encoded = cv2.imencode('.jpg', frame)
         if ret:
             data = encoded.tobytes()
             header = struct.pack(HEADER_FORMAT, b'V', len(data))
             message = header + data
-            # Use the event loop to schedule the send coroutine
             asyncio.run_coroutine_threadsafe(websocket.send(message), loop)
-        cv2.waitKey(30)  # ~30 fps
+        cv2.waitKey(30)
 
 def audio_stream(websocket, loop):
     pa = pyaudio.PyAudio()
