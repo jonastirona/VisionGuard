@@ -1,3 +1,4 @@
+import asyncio
 import json
 import base64
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -14,7 +15,7 @@ class StreamConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         self.video.release()
         self.audio.stop()
-
+        
     async def receive(self, text_data):
         # Send combined stream at 30 FPS
         while True:
@@ -32,3 +33,4 @@ class StreamConsumer(AsyncWebsocketConsumer):
                 }))
             else:
                 break
+            await asyncio.sleep(1/30)
