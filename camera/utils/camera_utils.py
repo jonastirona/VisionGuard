@@ -1,7 +1,17 @@
-# Python
-STREAM_SERVER_HOST = 'localhost'
-STREAM_SERVER_PORT = 8000
+import cv2
 
-def get_stream_url():
-    protocol = 'wss' if settings.SECURE_SSL_REDIRECT else 'ws'
-    return f"{protocol}://{STREAM_SERVER_HOST}:{STREAM_SERVER_PORT}"
+class VideoCamera:
+    def __init__(self, source=1): # 0 for default camera, >0 for external cameras
+        self.cam = cv2.VideoCapture(source)
+        if not self.cam.isOpened():
+            raise IOError("Cannot access webcam")
+
+    def get_frame(self):
+        success, frame = self.cam.read()
+        if not success:
+            return None
+        ret, jpeg = cv2.imencode('.jpg', frame)
+        return jpeg.tobytes()
+
+    def __del__(self):
+        self.cam.release()
