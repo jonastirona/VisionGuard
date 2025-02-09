@@ -1,7 +1,7 @@
 import cv2
 
 class VideoCamera:
-    def __init__(self, source=1): # 0 for default camera, >0 for external cameras
+    def __init__(self, source=0): # 0 for default camera, 1 for external camera
         self.cam = cv2.VideoCapture(source)
         if not self.cam.isOpened():
             raise IOError("Cannot access webcam")

@@ -4,10 +4,6 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(os.path.join(BASE_DIR, '.env'))
-
-SECRET_KEY = os.getenv('SECRET_KEY')
-
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.auth',
@@ -30,7 +26,9 @@ TEMPLATES = [
     },
 ]
 
+# filepath: /c:/Users/Jonas/OneDrive/Documents/repos/VisionGuard/core/settings.py
 MIDDLEWARE = [
+    # 'django_basic_auth_ip_whitelist.middleware.BasicAuthIPWhitelistMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -38,7 +36,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'core.middleware.CloudflareAccessMiddleware',
 ]
 
 ALLOWED_HOSTS = [
