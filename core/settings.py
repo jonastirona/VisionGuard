@@ -10,7 +10,10 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.auth',
     'camera.apps.CameraConfig',
+    'channels',
 ]
+
+ASGI_APPLICATION = 'core.routing.application'
 
 TEMPLATES = [
     {

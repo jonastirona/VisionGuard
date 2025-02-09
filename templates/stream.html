@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <video id="stream" width="640" height="480" controls autoplay></video>
+    <audio id="audio" controls autoplay></audio>
+    
+    <script>
+        const video = document.getElementById('stream');
+        const audio = document.getElementById('audio');
+        const ws = new WebSocket('ws://' + window.location.host + '/ws/stream/');
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            if(data.video) {
+                video.src = 'data:image/jpeg;base64,' + data.video;
+            }
+            
+            if(data.audio) {
+                const audioBlob = new Blob(
+                    [new Uint8Array(base64ToArrayBuffer(data.audio))], 
+                    {type: 'audio/wav'}
+                );
+                audio.src = URL.createObjectURL(audioBlob);
+            }
+        };
+
+        function base64ToArrayBuffer(base64) {
+            const binary_string = atob(base64);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+    </script>
+</body>
+</html>
