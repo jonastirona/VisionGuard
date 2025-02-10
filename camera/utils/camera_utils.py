@@ -19,9 +19,9 @@ class VideoProcessor:
         success, frame = self.cap.read()
         if not success:
             return None
-        frame = cv2.resize(frame, (320, 240))
         frame = self.detect_faces(frame)
-        ret, jpeg = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+        # Maintain JPEG quality at 90
+        ret, jpeg = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
         return jpeg.tobytes()
 
     def release(self):
