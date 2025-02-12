@@ -24,4 +24,4 @@ Vision Guard is an open-source, AI-powered security camera system designed for i
 
 ## Get Started
 
-Coming soon...
+coming soon!
