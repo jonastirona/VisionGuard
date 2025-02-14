@@ -9,7 +9,7 @@ Vision Guard is an open-source, AI-powered security camera system designed for i
 ### Completed
 
 - Video/Audio streaming
-- CloudFlare User authentication
+- CloudFlare user authentication
 - Facial recognition
 
 ### In Progress
